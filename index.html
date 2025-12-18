@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蛋小黄与蛋小黑的故事</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            overflow: hidden;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+        }
+        
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        /* 背景图片样式 */
+        #background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.5s ease;
+            opacity: 1;
+        }
+        
+        /* 渐变文本效果 */
+        #opening-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.9);
+            transition: opacity 2s ease;
+        }
+        
+        .fade-in-text {
+            font-size: 4.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 3s forwards;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            color: #ffd700;
+        }
+        
+        .fade-in-text:nth-child(2) {
+            animation-delay: 3s;
+            font-size: 2.8rem;
+            color: #ff6b6b;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        /* 角色图片容器 */
+        #characters {
+            position: absolute;
+            width: 100%;
+            height: 70%;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            z-index: 2;
+            padding: 0 10%;
+        }
+        
+        .character {
+            width: 40%;
+            height: 90%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+        
+        #character-left {
+            background-position: left bottom;
+        }
+        
+        #character-right {
+            background-position: right bottom;
+        }
+        
+        /* 对话框样式 */
+        #dialog-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30%;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-top: 3px solid #ffd700;
+            z-index: 5;
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            transition: opacity 0.5s ease;
+        }
+        
+        #speaker-name {
+            font-size: 1.8rem;
+            color: #ffd700;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            min-height: 2.5rem;
+        }
+        
+        #dialog-text {
+            font-size: 1.5rem;
+            line-height: 1.8;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+        
+        #dialog-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            gap: 1rem;
+        }
+        
+        .dialog-btn {
+            background-color: #333;
+            color: #fff;
+            border: 2px solid #ffd700;
+            border-radius: 5px;
+            padding: 0.5rem 1.2rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .dialog-btn:hover {
+            background-color: #ffd700;
+            color: #000;
+        }
+        
+        /* 主菜单样式 */
+        #main-menu {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+        
+        .menu-title {
+            font-size: 4.5rem;
+            color: #ffd700;
+            margin-bottom: 4rem;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+        }
+        
+        .menu-btn {
+            background-color: transparent;
+            color: #fff;
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 1.2rem 3rem;
+            font-size: 2rem;
+            margin: 1rem 0;
+            cursor: pointer;
+            width: 300px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-btn:hover {
+            background-color: #ffd700;
+            color: #000;
+            transform: scale(1.05);
+        }
+        
+        /* 进度指示器 */
+        #progress-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            z-index: 6;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .fade-in-text {
+                font-size: 2.8rem;
+            }
+            
+            .fade-in-text:nth-child(2) {
+                font-size: 1.8rem;
+            }
+            
+            #dialog-text {
+                font-size: 1.2rem;
+            }
+            
+            .menu-title {
+                font-size: 3rem;
+            }
+            
+            .menu-btn {
+                font-size: 1.5rem;
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- 背景图片 -->
+        <div id="background"></div>
+        
+        <!-- 开场渐变文本 -->
+        <div id="opening-text">
+            <div class="fade-in-text">你好</div>
+            <div class="fade-in-text">欢迎来到这个绝望的世界</div>
+        </div>
+        
+        <!-- 角色图片 -->
+        <div id="characters">
+            <div id="character-left" class="character"></div>
+            <div id="character-right" class="character"></div>
+        </div>
+        
+        <!-- 对话框 -->
+        <div id="dialog-container" style="display: none;">
+            <div id="speaker-name"></div>
+            <div id="dialog-text"></div>
+            <div id="dialog-controls">
+                <button id="auto-btn" class="dialog-btn">自动</button>
+                <button id="fast-forward-btn" class="dialog-btn">快进</button>
+                <button id="next-btn" class="dialog-btn">继续</button>
+            </div>
+        </div>
+        
+        <!-- 主菜单 -->
+        <div id="main-menu">
+            <div class="menu-title">蛋小黄的故事</div>
+            <button id="start-btn" class="menu-btn">开始游戏</button>
+            <button id="continue-btn" class="menu-btn">继续游戏</button>
+        </div>
+        
+        <!-- 进度指示器 -->
+        <div id="progress-indicator" style="display: none;">
+            对话进度: <span id="progress-text">0/15</span>
+        </div>
+    </div>
+
+    <!-- 音频元素 -->
+    <audio id="dialog-sound" preload="auto">
+        <source src="gada.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="game-bgm" preload="auto" loop>
+        <source src="Gada-game.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 游戏状态管理
+        const gameState = {
+            currentDialog: 0,
+            isAutoPlay: false,
+            isFastForward: false,
+            autoPlayTimeout: null,
+            dialogs: [
+                // 开场特殊对话框
+                { 
+                    speaker: "", 
+                    text: "这是我一生的故事。", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第1个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "我遇到了一生难忘的蛋", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第2个对话框
+                { 
+                    speaker: "", 
+                    text: "我喜欢拍摄我的日常，转到这个学校我便开始记录这一切。", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: "IMG_1746.jpeg",
+                    characterEffect: null
+                },
+                // 第3个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "幻觉吗？ 还是……电影特效？", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: { target: "IMG_1748.jpeg", side: "right" }
+                },
+                // 第4个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "你的剪辑技术还是没变，蛋小黄。二十年了，还在反复剪我们那部电影？", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第5个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "你明明……我拍了你的死亡镜头。蛋仔岛上，所有人都哭了。", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第6个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "死亡是真的，但'结束'不是哦。蛋的脑死亡会重置记忆，可电影不会忘。", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第7个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "蛋？那时候的剧本是假的……", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第8个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "剧本是你编的，但愿望是真的。我怕忘了你，忘了该成为什么样的人，就把电影当成备忘录啦。你现在来这儿，是想拍自己的遗言镜头？", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第9个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "我试过像电影一样剪记忆，可怎么剪，痛苦都删不掉。", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第10个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "你的电影里，医院爆炸是假的，但你的逃避是真的；我们的电影里，蛋是假的，但你的温柔是真的。记忆不用剪的完美，只要留下想记住的部分就好。", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第11个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "可我连你真实的样子都快忘了……你朋友说，你戴眼镜、有牙套，脾气很差。", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第12个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "那又怎样？你镜头里的我，是你想记住的我。就像我记住的你，永远是那个在天台拿着摄像机，连死亡都想拍成电影的少年。", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第13个对话框
+                { 
+                    speaker: "蛋小黄", 
+                    text: "所以你回来，是为了让我再拍一部电影？", 
+                    character: "IMG_1747.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第14个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "是为了跟你说再见呀。这次别用爆炸当结尾了，蛋小黄。你该自己活下去，当自己人生的导演。", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                },
+                // 第15个对话框
+                { 
+                    speaker: "蛋小黑", 
+                    text: "再见啦，记得哦，下次剪电影的时候，给生活加一抹真的奇幻元素——比如，活下去。", 
+                    character: "IMG_1748.jpeg",
+                    sound: "gada.mp3",
+                    background: null,
+                    characterEffect: null
+                }
+            ]
+        };
+
+        // DOM元素引用
+        const backgroundEl = document.getElementById('background');
+        const openingTextEl = document.getElementById('opening-text');
+        const dialogContainerEl = document.getElementById('dialog-container');
+        const speakerNameEl = document.getElementById('speaker-name');
+        const dialogTextEl = document.getElementById('dialog-text');
+        const characterLeftEl = document.getElementById('character-left');
+        const characterRightEl = document.getElementById('character-right');
+        const mainMenuEl = document.getElementById('main-menu');
+        const progressIndicatorEl = document.getElementById('progress-indicator');
+        const progressTextEl = document.getElementById('progress-text');
+        const dialogSoundEl = document.getElementById('dialog-sound');
+        const gameBgmEl = document.getElementById('game-bgm');
+        
+        // 按钮引用
+        const autoBtn = document.getElementById('auto-btn');
+        const fastForwardBtn = document.getElementById('fast-forward-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const startBtn = document.getElementById('start-btn');
+        const continueBtn = document.getElementById('continue-btn');
+
+        // 游戏初始化
+        function initGame() {
+            // 设置事件监听器
+            nextBtn.addEventListener('click', showNextDialog);
+            autoBtn.addEventListener('click', toggleAutoPlay);
+            fastForwardBtn.addEventListener('click', toggleFastForward);
+            startBtn.addEventListener('click', restartGame);
+            continueBtn.addEventListener('click', hideMainMenu);
+            
+            // 设置音频
+            dialogSoundEl.volume = 0.5;
+            gameBgmEl.volume = 0.3;
+            
+            // 开始开场动画
+            setTimeout(startGame, 6000);
+        }
+
+        // 开始游戏
+        function startGame() {
+            // 隐藏开场文本
+            openingTextEl.style.opacity = '0';
+            
+            setTimeout(() => {
+                openingTextEl.style.display = 'none';
+                dialogContainerEl.style.display = 'flex';
+                progressIndicatorEl.style.display = 'block';
+                
+                // 播放背景音乐
+                gameBgmEl.play().catch(e => console.log("音频自动播放被阻止:", e));
+                
+                // 显示第一个对话框
+                showDialog(0);
+            }, 1000);
+        }
+
+        // 显示对话框
+        function showDialog(index) {
+            if (index >= gameState.dialogs.length) {
+                showMainMenu();
+                return;
+            }
+            
+            gameState.currentDialog = index;
+            const dialog = gameState.dialogs[index];
+            
+            // 更新进度指示器
+            progressTextEl.textContent = `${index + 1}/${gameState.dialogs.length}`;
+            
+            // 更新说话者名称
+            speakerNameEl.textContent = dialog.speaker;
+            
+            // 更新对话框文本
+            dialogTextEl.textContent = '';
+            
+            // 播放对话框音效
+            if (dialog.sound) {
+                dialogSoundEl.currentTime = 0;
+                dialogSoundEl.play().catch(e => console.log("对话框音效播放失败:", e));
+            }
+            
+            // 如果有背景变化，更新背景
+            if (dialog.background) {
+                backgroundEl.style.backgroundImage = `url('${dialog.background}')`;
+            }
+            
+            // 处理角色显示效果
+            updateCharacters(dialog);
+            
+            // 文本逐字显示效果
+            typeWriterEffect(dialog.text, dialogTextEl, () => {
+                // 文本显示完成后，如果是自动播放模式，设置下一个对话框
+                if (gameState.isAutoPlay) {
+                    clearTimeout(gameState.autoPlayTimeout);
+                    const delay = gameState.isFastForward ? 1000 : 3000;
+                    gameState.autoPlayTimeout = setTimeout(() => {
+                        showNextDialog();
+                    }, delay);
+                }
+            });
+        }
+
+        // 打字机效果显示文本
+        function typeWriterEffect(text, element, callback) {
+            let i = 0;
+            const speed = gameState.isFastForward ? 20 : 50;
+            
+            function typeWriter() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, speed);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            
+            typeWriter();
+        }
+
+        // 更新角色显示
+        function updateCharacters(dialog) {
+            // 首先隐藏所有角色
+            characterLeftEl.style.opacity = '0';
+            characterRightEl.style.opacity = '0';
+            
+            // 设置角色图片
+            if (dialog.character === "IMG_1747.jpeg") {
+                characterLeftEl.style.backgroundImage = `url('IMG_1747.jpeg')`;
+                setTimeout(() => {
+                    characterLeftEl.style.opacity = '1';
+                }, 300);
+            } else if (dialog.character === "IMG_1748.jpeg") {
+                characterRightEl.style.backgroundImage = `url('IMG_1748.jpeg')`;
+                setTimeout(() => {
+                    characterRightEl.style.opacity = '1';
+                }, 300);
+            }
+            
+            // 处理角色特效
+            if (dialog.characterEffect) {
+                const effect = dialog.characterEffect;
+                if (effect.target === "IMG_1748.jpeg" && effect.side === "right") {
+                    characterRightEl.style.backgroundImage = `url('${effect.target}')`;
+                    characterRightEl.style.opacity = '0';
+                    
+                    // 渐变显示效果
+                    setTimeout(() => {
+                        characterRightEl.style.transition = 'opacity 2s ease';
+                        characterRightEl.style.opacity = '1';
+                    }, 500);
+                }
+            }
+        }
+
+        // 显示下一个对话框
+        function showNextDialog() {
+            if (gameState.currentDialog < gameState.dialogs.length) {
+                showDialog(gameState.currentDialog + 1);
+            }
+        }
+
+        // 切换自动播放
+        function toggleAutoPlay() {
+            gameState.isAutoPlay = !gameState.isAutoPlay;
+            autoBtn.textContent = gameState.isAutoPlay ? '自动中' : '自动';
+            autoBtn.style.backgroundColor = gameState.isAutoPlay ? '#ffd700' : '#333';
+            autoBtn.style.color = gameState.isAutoPlay ? '#000' : '#fff';
+            
+            if (gameState.isAutoPlay) {
+                // 如果当前文本已经显示完成，立即进入下一个对话框
+                const currentText = gameState.dialogs[gameState.currentDialog].text;
+                if (dialogTextEl.textContent.length >= currentText.length) {
+                    showNextDialog();
+                }
+            } else {
+                clearTimeout(gameState.autoPlayTimeout);
+            }
+        }
+
+        // 切换快进模式
+        function toggleFastForward() {
+            gameState.isFastForward = !gameState.isFastForward;
+            fastForwardBtn.textContent = gameState.isFastForward ? '快进中' : '快进';
+            fastForwardBtn.style.backgroundColor = gameState.isFastForward ? '#ff6b6b' : '#333';
+            fastForwardBtn.style.color = gameState.isFastForward ? '#000' : '#fff';
+        }
+
+        // 显示主菜单
+        function showMainMenu() {
+            mainMenuEl.style.display = 'flex';
+            dialogContainerEl.style.display = 'none';
+            progressIndicatorEl.style.display = 'none';
+            gameBgmEl.pause();
+        }
+
+        // 隐藏主菜单
+        function hideMainMenu() {
+            mainMenuEl.style.display = 'none';
+            dialogContainerEl.style.display = 'flex';
+            progressIndicatorEl.style.display = 'block';
+            gameBgmEl.play().catch(e => console.log("音频播放被阻止:", e));
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            // 重置游戏状态
+            gameState.currentDialog = 0;
+            gameState.isAutoPlay = false;
+            gameState.isFastForward = false;
+            
+            // 重置UI状态
+            autoBtn.textContent = '自动';
+            autoBtn.style.backgroundColor = '#333';
+            autoBtn.style.color = '#fff';
+            fastForwardBtn.textContent = '快进';
+            fastForwardBtn.style.backgroundColor = '#333';
+            fastForwardBtn.style.color = '#fff';
+            
+            // 重置背景和角色
+            backgroundEl.style.backgroundImage = '';
+            characterLeftEl.style.opacity = '0';
+            characterRightEl.style.opacity = '0';
+            
+            // 隐藏主菜单，显示开场动画
+            mainMenuEl.style.display = 'none';
+            openingTextEl.style.display = 'flex';
+            openingTextEl.style.opacity = '1';
+            dialogContainerEl.style.display = 'none';
+            progressIndicatorEl.style.display = 'none';
+            
+            // 重新开始游戏
+            setTimeout(startGame, 6000);
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
